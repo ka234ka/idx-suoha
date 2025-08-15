@@ -1,6 +1,1 @@
-# 固定端口（与 Cloudflare Zero Trust 对齐）
 PORT=2546
-
-# 你的服务启动命令（可替换）。保留 ${PORT} 占位可自动引用端口值。
-# 默认用一个可见的演示服务，便于联通性验证：
-APP_CMD="python3 -m http.server ${PORT} --bind 0.0.0.0"
