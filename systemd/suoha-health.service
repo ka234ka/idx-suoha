@@ -1,0 +1,6 @@
+[Unit]
+Description=suoha health check
+
+[Service]
+Type=oneshot
+ExecStart=/opt/suoha/healthcheck.sh

@@ -1,0 +1,17 @@
+[Unit]
+Description=suoha (2546) fixed-port service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/suoha/run.sh
+EnvironmentFile=/opt/suoha/env
+Restart=always
+RestartSec=3
+OOMScoreAdjust=-500
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
