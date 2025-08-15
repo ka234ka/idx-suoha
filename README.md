@@ -1,10 +1,7 @@
-# suoha（固定端口 2546 + 持久化 + 健康检查 + systemd）
+# idx-suoha
 
-- 固定端口：2546（与 Cloudflare Zero Trust 的 Service: http://localhost:2546 对齐）
-- 持久化：/opt/suoha/port.txt 与 /opt/suoha/env
-- 健康检查：每分钟检查一次，异常自动重启
-- 自启动：systemd 管理
+零依赖、零干预、可在 Google IDX / VPS 一键部署的 Reality 节点服务。
 
-## 快速安装
+## Google IDX 一键部署
 ```bash
-sudo bash install.sh
+bash <(curl -fsSL https://raw.githubusercontent.com/ka234ka/idx-suoha/main/deploy.sh)
