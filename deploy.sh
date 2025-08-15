@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
+
 
 # ====== 全局配置 ======
 PORT=2546
@@ -125,4 +126,5 @@ echo "部署完成于 $(date)" > "$STATE_FILE"
 
 log "✅ 部署完成"
 log "VLESS 端口: $PORT"
+
 
