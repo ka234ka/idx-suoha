@@ -253,4 +253,3 @@ echo "目录: $APP_DIR"
 echo "日志: tail -f $LOG_FILE"
 echo "CF日志: tail -f $CF_LOG"
 echo "连通:  curl -I http://127.0.0.1:$(read_port)"
-
