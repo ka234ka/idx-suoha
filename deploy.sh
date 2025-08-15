@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Integrated IDX deployer with CF tunnel auto-reconnect
-set -Eeuo pipefail
+
+# 开启严格模式，如果 shell 不支持 pipefail 则自动降级
+set -Eeuo pipefail 2>/dev/null || set -Eeuo
 
 # ---------------------------
 # Config
@@ -59,7 +61,7 @@ write_defaults_if_missing() {
   if [[ ! -f "$OPT_DIR/run.sh" ]]; then
     cat > "$OPT_DIR/run.sh" <<'EOF'
 #!/usr/bin/env bash
-set -Eeuo pipefail
+set -Eeuo pipefail 2>/dev/null || set -Eeuo
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Load env
@@ -93,7 +95,7 @@ EOF
   if [[ ! -f "$OPT_DIR/healthcheck.sh" ]]; then
     cat > "$OPT_DIR/healthcheck.sh" <<'EOF'
 #!/usr/bin/env bash
-set -Eeuo pipefail
+set -Eeuo pipefail 2>/dev/null || set -Eeuo
 BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOG_FILE="$HOME/suoha/suoha.log"
 
@@ -132,17 +134,14 @@ EOF
 
 install_cron_or_watchdog() {
   if command -v crontab >/dev/null 2>&1; then
-    # idempotent install
     ( crontab -l 2>/dev/null | grep -v "$OPT_DIR/healthcheck.sh" ; \
       echo "* * * * * $OPT_DIR/healthcheck.sh # suoha-healthcheck" ) | crontab -
     log "已安装 cron 健康检查（每分钟）"
-    # stop watchdog if previously running
     kill_if_running "$WATCHDOG"
   else
-    # watchdog loop
     cat > "$WATCHDOG" <<EOF
 #!/usr/bin/env bash
-set -Eeuo pipefail
+set -Eeuo pipefail 2>/dev/null || set -Eeuo
 while true; do
   "$OPT_DIR/healthcheck.sh" || true
   sleep 60
@@ -171,14 +170,12 @@ detect_arch_asset() {
   case "$arch" in
     x86_64|amd64) echo "cloudflared-linux-amd64" ;;
     aarch64|arm64) echo "cloudflared-linux-arm64" ;;
-    *) echo "cloudflared-linux-amd64" ;; # fallback
+    *) echo "cloudflared-linux-amd64" ;;
   esac
 }
 
 ensure_cloudflared() {
-  if command -v cloudflared >/dev/null 2>&1; then
-    return 0
-  fi
+  if command -v cloudflared >/dev/null 2>&1; then return 0; fi
   log "未检测到 cloudflared，正在下载..."
   mkdir -p "$HOME/.local/bin"
   local asset; asset="$(detect_arch_asset)"
@@ -199,59 +196,9 @@ start_cloudflared_if_token() {
     warn "未检测到 CF_TUNNEL_TOKEN，跳过 Cloudflare 隧道启动"
     return 0
   fi
-
-  # stop old instance
   kill_if_running "cloudflared tunnel"
-
   ensure_cloudflared
   : > "$CF_LOG" || true
   log "启动 Cloudflare 隧道..."
-  nohup cloudflared tunnel --no-autoupdate run --token "$CF_TUNNEL_TOKEN" > "$CF_LOG" 2>&1 &
-  sleep 3
-
-  if grep -Eiq "Connected|Route propagating|Tunnel established" "$CF_LOG"; then
-    log "✅ CF 隧道已连接（查看：$CF_LOG）"
-  else
-    warn "⚠️ CF 隧道日志未出现成功标记，请检查：$CF_LOG"
-  fi
-}
-
-# ---------------------------
-# Steps
-# ---------------------------
-ensure_path
-
-log "[1/7] 克隆或更新仓库..."
-if [[ -d "$APP_DIR/.git" ]]; then
-  git -C "$APP_DIR" pull --rebase --autostash
-else
-  git clone "$REPO_URL" "$APP_DIR"
-fi
-
-log "[2/7] 准备运行环境..."
-write_defaults_if_missing
-chmod +x "$OPT_DIR/"*.sh || true
-
-log "[3/7] 停止旧进程..."
-kill_if_running "$WATCHDOG"
-kill_if_running "$OPT_DIR/run.sh"
-
-log "[4/7] 启动服务..."
-start_service
-
-log "[5/7] 安装保活机制..."
-install_cron_or_watchdog
-
-log "[6/7] 基本可用性验证..."
-verify_service
-
-log "[7/7] 检查并启动 Cloudflare 隧道（可选）..."
-start_cloudflared_if_token
-
-log "✅ 部署完成"
-echo "目录: $APP_DIR"
-echo "日志: tail -f $LOG_FILE"
-echo "CF日志: tail -f $CF_LOG"
-echo "连通:  curl -I http://127.0.0.1:$(read_port)"
-
+  nohup cloud
 
