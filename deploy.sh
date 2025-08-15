@@ -5,7 +5,7 @@ set -Eeuo pipefail
 # ---------------------------
 # Config
 # ---------------------------
-REPO_URL="${REPO_URL:-https://github.com/ka4ka/idx-suoha.git}"
+REPO_URL="${REPO_URL:-https://github.com/ka234ka/idx-suoha.git}"
 APP_DIR="${APP_DIR:-$HOME/suoha}"
 OPT_DIR="$APP_DIR/opt/suoha"
 LOG_FILE="$APP_DIR/suoha.log"
@@ -253,4 +253,5 @@ echo "目录: $APP_DIR"
 echo "日志: tail -f $LOG_FILE"
 echo "CF日志: tail -f $CF_LOG"
 echo "连通:  curl -I http://127.0.0.1:$(read_port)"
+
 
